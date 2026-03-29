@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 import sys
 import os
+from pathlib import Path
 sys.path.insert(0, os.path.dirname(__file__))
+
+from fastapi import FastAPI, HTTPException, UploadFile, File, Query
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from analyzer import analyze_text, analyze_image
 from database import save_check, get_recent_checks, get_all_checks, get_stats
 import uvicorn
@@ -14,7 +16,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS - allows frontend to talk to backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,6 +28,7 @@ app.add_middleware(
 class TextRequest(BaseModel):
     text: str
     input_type: str = "text"
+    device_id: str = "anonymous"
 
 
 @app.get("/")
@@ -47,26 +49,18 @@ def health():
 @app.post("/analyze")
 async def analyze(request: TextRequest):
     if not request.text or len(request.text.strip()) < 5:
-        raise HTTPException(
-            status_code=400,
-            detail="Text is too short. Please enter a valid headline or URL."
-        )
-
+        raise HTTPException(status_code=400, detail="Text is too short.")
     if len(request.text) > 2000:
-        raise HTTPException(
-            status_code=400,
-            detail="Text is too long. Please enter text under 2000 characters."
-        )
+        raise HTTPException(status_code=400, detail="Text is too long. Max 2000 characters.")
 
-    # Run AI analysis
     result = analyze_text(request.text.strip())
 
-    # Save to database (non-blocking)
     try:
         save_check(
             input_text=request.text.strip(),
             input_type=request.input_type,
-            result=result
+            result=result,
+            device_id=request.device_id
         )
     except Exception as e:
         print(f"Save error (non-critical): {e}")
@@ -75,33 +69,27 @@ async def analyze(request: TextRequest):
 
 
 @app.post("/analyze-image")
-async def analyze_image_endpoint(file: UploadFile = File(...)):
-    # Validate file type
+async def analyze_image_endpoint(
+    file: UploadFile = File(...),
+    device_id: str = Query(default="anonymous")
+):
     allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
     if file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=400,
-            detail="Only JPEG and PNG images are allowed."
-        )
+        raise HTTPException(status_code=400, detail="Only JPEG and PNG images are allowed.")
 
-    # Validate file size (max 5MB)
     contents = await file.read()
     if len(contents) > 5 * 1024 * 1024:
-        raise HTTPException(
-            status_code=400,
-            detail="Image too large. Maximum size is 5MB."
-        )
+        raise HTTPException(status_code=400, detail="Image too large. Max 5MB.")
 
-    # Run AI analysis on image
     result = analyze_image(contents, file.filename)
     result["input_type"] = "image"
 
-    # Save to database
     try:
         save_check(
             input_text=f"[Image: {file.filename}]",
             input_type="image",
-            result=result
+            result=result,
+            device_id=device_id
         )
     except Exception as e:
         print(f"Save error (non-critical): {e}")
@@ -110,8 +98,11 @@ async def analyze_image_endpoint(file: UploadFile = File(...)):
 
 
 @app.get("/history")
-def history(limit: int = 50):
-    checks = get_all_checks(limit=limit)
+def history(
+    limit: int = 50,
+    device_id: str = Query(default=None)
+):
+    checks = get_all_checks(limit=limit, device_id=device_id)
     return {"checks": checks}
 
 
@@ -122,8 +113,8 @@ def recent(limit: int = 10):
 
 
 @app.get("/stats")
-def stats():
-    return get_stats()
+def stats(device_id: str = Query(default=None)):
+    return get_stats(device_id=device_id)
 
 
 if __name__ == "__main__":

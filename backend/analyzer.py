@@ -2,9 +2,9 @@ import httpx
 import json
 import os
 import base64
+from pathlib import Path
 from dotenv import load_dotenv
 
-from pathlib import Path
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -20,40 +20,110 @@ HEADERS = {
 
 
 def build_prompt(text: str) -> str:
-    return f"""You are Vishwaas AI, an expert fake news detector for India. Analyze the following news content and respond ONLY with a valid JSON object.
+    return f"""You are Vishwaas AI, a strict Indian fact-checker. Analyze this news and give a DECISIVE verdict.
 
-NEWS CONTENT: "{text}"
+NEWS: "{text}"
 
-Instructions:
-- Detect the language (English, Hindi, Marathi, Tamil, Bengali, Telugu, etc.)
-- If not in English, translate and analyze it
-- Score each dimension from 0 to 100
-- For overall_score: 0-40 = FAKE, 41-69 = UNCERTAIN, 70-100 = REAL
-- Find specific words that are sensationalist or suspicious
-- Give 3-5 clear reasons for your verdict
-- List real sources that can verify this claim
+STRICT RULES:
+- "Government announces free X for all" = FAKE, score 10-25
+- "Tax free India/country" claims = FAKE, score 10-20
+- Sensational claims without source = FAKE, score 15-35
+- Verified official government news = REAL, score 75-95
+- Celebrity rumors = UNCERTAIN, score 40-60
+- NEVER give 50 as overall_score
 
-Respond ONLY with this exact JSON format, no other text:
-{{
-    "detected_language": "English",
-    "overall_score": 75,
-    "verdict": "REAL",
-    "summary": "One sentence plain English explanation of verdict",
-    "source_reliability": 80,
-    "emotional_language": 30,
-    "fact_check_match": 70,
-    "sensationalism": 25,
-    "flagged_words": ["word1", "word2", "word3"],
-    "reasons": [
-        "Reason 1 explaining the verdict",
-        "Reason 2 explaining the verdict",
-        "Reason 3 explaining the verdict"
-    ],
-    "sources": [
-        "Source 1 name or URL",
-        "Source 2 name or URL"
-    ]
-}}"""
+Detect language. If Hindi/Marathi/Tamil/Bengali — translate then analyze.
+
+Return ONLY this JSON with no extra text, no markdown, no code fences:
+{{"detected_language":"English","overall_score":20,"verdict":"FAKE","summary":"Clear reason for verdict.","source_reliability":10,"emotional_language":85,"fact_check_match":10,"sensationalism":88,"flagged_words":["word1","word2"],"reasons":["Reason 1","Reason 2","Reason 3"],"sources":["Source 1","Source 2"]}}
+
+Now analyze: "{text}" and return a NEW JSON with real values."""
+
+
+def parse_response(content: str) -> dict:
+    content = content.strip()
+
+    # Strip markdown fences
+    if "```" in content:
+        parts = content.split("```")
+        for part in parts:
+            part = part.strip()
+            if part.startswith("json"):
+                part = part[4:].strip()
+            if part.startswith("{"):
+                content = part
+                break
+
+    content = content.strip()
+
+    # Find JSON object in response
+    start = content.find("{")
+    end = content.rfind("}") + 1
+    if start != -1 and end > start:
+        content = content[start:end]
+
+    try:
+        result = json.loads(content)
+
+        # Handle model's own format
+        if "is_fake_news" in result:
+            is_fake = result.get("is_fake_news", False)
+            reason = result.get("reason", "Analysis complete.")
+            verdict = "FAKE" if is_fake else "REAL"
+            score = 20 if is_fake else 80
+            return {
+                "detected_language": "English",
+                "overall_score": score,
+                "verdict": verdict,
+                "summary": reason[:200],
+                "source_reliability": 15 if is_fake else 85,
+                "emotional_language": 80 if is_fake else 20,
+                "fact_check_match": 10 if is_fake else 85,
+                "sensationalism": 85 if is_fake else 15,
+                "flagged_words": [],
+                "reasons": [reason],
+                "sources": []
+            }
+
+        # Our expected format
+        if "overall_score" in result and "verdict" in result:
+            return result
+
+    except json.JSONDecodeError:
+        pass
+
+    # Last resort — scan for keywords
+    content_lower = content.lower()
+    if "fake" in content_lower:
+        return {
+            "detected_language": "English",
+            "overall_score": 20,
+            "verdict": "FAKE",
+            "summary": "This content shows signs of misinformation.",
+            "source_reliability": 15,
+            "emotional_language": 80,
+            "fact_check_match": 10,
+            "sensationalism": 85,
+            "flagged_words": [],
+            "reasons": ["Content identified as potentially fake", "Sensational claims without verified sources"],
+            "sources": []
+        }
+    elif "real" in content_lower or "true" in content_lower:
+        return {
+            "detected_language": "English",
+            "overall_score": 80,
+            "verdict": "REAL",
+            "summary": "This content appears to be credible.",
+            "source_reliability": 85,
+            "emotional_language": 20,
+            "fact_check_match": 85,
+            "sensationalism": 15,
+            "flagged_words": [],
+            "reasons": ["Content appears credible", "Matches known facts"],
+            "sources": []
+        }
+
+    return None
 
 
 def analyze_text(text: str) -> dict:
@@ -63,34 +133,25 @@ def analyze_text(text: str) -> dict:
             headers=HEADERS,
             json={
                 "model": OPENROUTER_MODEL,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": build_prompt(text)
-                    }
-                ],
-                "temperature": 0.3
+                "messages": [{"role": "user", "content": build_prompt(text)}],
+                "temperature": 0.1
             },
             timeout=30.0
         )
 
         data = response.json()
-
         if "choices" not in data:
+            print(f"No choices in response: {data}")
             return get_fallback_response(text)
 
         content = data["choices"][0]["message"]["content"]
+        print(f"Raw AI response: {content[:200]}")
 
-        # Clean the response - remove markdown code blocks if present
-        content = content.strip()
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-        content = content.strip()
+        result = parse_response(content)
+        if result:
+            return result
 
-        result = json.loads(content)
-        return result
+        return get_fallback_response(text)
 
     except Exception as e:
         print(f"Analyzer error: {e}")
@@ -99,60 +160,37 @@ def analyze_text(text: str) -> dict:
 
 def analyze_image(image_bytes: bytes, filename: str) -> dict:
     try:
-        # Convert image to base64
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-
-        # Determine media type
-        if filename.lower().endswith(".png"):
-            media_type = "image/png"
-        elif filename.lower().endswith(".jpg") or filename.lower().endswith(".jpeg"):
-            media_type = "image/jpeg"
-        else:
-            media_type = "image/jpeg"
+        media_type = "image/png" if filename.lower().endswith(".png") else "image/jpeg"
 
         response = httpx.post(
             OPENROUTER_URL,
             headers=HEADERS,
             json={
                 "model": "google/gemma-3-12b-it:free",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:{media_type};base64,{image_b64}"
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "content": "Extract all text from this WhatsApp screenshot or news image. Then " + build_prompt("[extracted text from image]")
-                            }
-                        ]
-                    }
-                ],
-                "temperature": 0.3
+                "messages": [{
+                    "role": "user",
+                    "content": [
+                        {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
+                        {"type": "text", "content": "Extract all text from this image then analyze if it is fake news. " + build_prompt("[extracted text from image]")}
+                    ]
+                }],
+                "temperature": 0.1
             },
             timeout=45.0
         )
 
         data = response.json()
-
         if "choices" not in data:
             return get_fallback_response("image content")
 
         content = data["choices"][0]["message"]["content"]
-        content = content.strip()
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-        content = content.strip()
+        result = parse_response(content)
+        if result:
+            result["input_type"] = "image"
+            return result
 
-        result = json.loads(content)
-        result["input_type"] = "image"
-        return result
+        return get_fallback_response("image content")
 
     except Exception as e:
         print(f"Image analyzer error: {e}")

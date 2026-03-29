@@ -1,8 +1,8 @@
 import httpx
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-from pathlib import Path
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -16,11 +16,12 @@ HEADERS = {
 }
 
 
-def save_check(input_text, input_type, result):
+def save_check(input_text, input_type, result, device_id="anonymous"):
     try:
         payload = {
             "input_text": input_text[:500],
             "input_type": input_type,
+            "device_id": device_id,
             "detected_language": result.get("detected_language", "Unknown"),
             "overall_score": result.get("overall_score", 50),
             "verdict": result.get("verdict", "UNCERTAIN"),
@@ -67,16 +68,19 @@ def get_recent_checks(limit=10):
         return []
 
 
-def get_all_checks(limit=50):
+def get_all_checks(limit=50, device_id=None):
     try:
+        params = {
+            "select": "*",
+            "order": "created_at.desc",
+            "limit": limit
+        }
+        if device_id:
+            params["device_id"] = f"eq.{device_id}"
         response = httpx.get(
             f"{SUPABASE_URL}/rest/v1/checks",
             headers=HEADERS,
-            params={
-                "select": "*",
-                "order": "created_at.desc",
-                "limit": limit
-            },
+            params=params,
             timeout=10.0
         )
         if response.status_code == 200:
@@ -87,12 +91,15 @@ def get_all_checks(limit=50):
         return []
 
 
-def get_stats():
+def get_stats(device_id=None):
     try:
+        params = {"select": "verdict"}
+        if device_id:
+            params["device_id"] = f"eq.{device_id}"
         response = httpx.get(
             f"{SUPABASE_URL}/rest/v1/checks",
             headers=HEADERS,
-            params={"select": "verdict"},
+            params=params,
             timeout=10.0
         )
         if response.status_code == 200:

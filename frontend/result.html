@@ -6,6 +6,7 @@
   <title>Vishwaas AI — Analysis Result</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <meta name="theme-color" content="#6c63ff" />
 </head>
 <body>
@@ -16,7 +17,12 @@
 <!-- Navbar -->
 <nav class="navbar">
   <div class="container navbar-inner">
-    <a href="index.html" class="navbar-logo">Vishwaas<span>AI</span></a>
+    <a href="index.html" class="navbar-logo">
+      <svg width="26" height="26" viewBox="0 0 32 32" style="margin-right:8px;vertical-align:middle;flex-shrink:0">
+        <circle cx="13" cy="13" r="7" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+        <line x1="18" y1="18" x2="25" y2="25" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>Vishwaas<span>AI</span>
+    </a>
     <ul class="navbar-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="history.html">History</a></li>
@@ -253,11 +259,25 @@
     const sourcesList = document.getElementById('sourcesList');
     if (r.sources && r.sources.length > 0) {
       sourcesList.innerHTML = r.sources.map(source => {
-        const isUrl = source.startsWith('http');
-        return isUrl
-          ? `<a href="${escapeHtml(source)}" target="_blank" class="source-item">🔗 ${escapeHtml(source)}</a>`
-          : `<div class="source-item">📰 ${escapeHtml(source)}</div>`;
-      }).join('');
+        if (!source || source.trim() === '') return '';
+        // Check if full URL
+        if (source.startsWith('http')) {
+          return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="source-item">🔗 ${escapeHtml(source)}</a>`;
+        }
+        // Extract URL from text like "Source name — https://..."
+        const urlMatch = source.match(/https?:\/\/[^\s,)]+/);
+        if (urlMatch) {
+          return `<a href="${urlMatch[0]}" target="_blank" rel="noopener noreferrer" class="source-item">🔗 ${escapeHtml(source)}</a>`;
+        }
+        // Extract domain like "pib.gov.in" or "incometaxindia.gov.in"
+        const domainMatch = source.match(/[\w.-]+\.(com|in|org|gov|net|io|co\.in)/i);
+        if (domainMatch) {
+          return `<a href="https://${domainMatch[0]}" target="_blank" rel="noopener noreferrer" class="source-item">🔗 ${escapeHtml(source)}</a>`;
+        }
+        // Fallback — Google search for the source name
+        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(source + ' India')}`;
+        return `<a href="${searchUrl}" target="_blank" rel="noopener noreferrer" class="source-item">🔍 ${escapeHtml(source)}</a>`;
+      }).filter(Boolean).join('');
     } else {
       sourcesList.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No external sources referenced.</div>';
     }

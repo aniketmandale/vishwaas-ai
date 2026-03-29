@@ -7,6 +7,7 @@
   <meta name="description" content="AI-powered fake news detector for India. Supports Hindi, Marathi, Tamil, Bengali and more." />
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <meta name="theme-color" content="#6c63ff" />
 </head>
 <body>
@@ -24,7 +25,12 @@
 <!-- Navbar -->
 <nav class="navbar">
   <div class="container navbar-inner">
-    <a href="index.html" class="navbar-logo">Vishwaas<span>AI</span></a>
+    <a href="index.html" class="navbar-logo">
+      <svg width="26" height="26" viewBox="0 0 32 32" style="margin-right:8px;vertical-align:middle;flex-shrink:0">
+        <circle cx="13" cy="13" r="7" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+        <line x1="18" y1="18" x2="25" y2="25" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>Vishwaas<span>AI</span>
+    </a>
     <ul class="navbar-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="history.html">History</a></li>
@@ -169,7 +175,18 @@
 
 <script>
   // ── CONFIG ──
-  const API_URL = 'https://vishwaas-ai-api.onrender.com';
+  const API_URL = 'http://localhost:8000';
+
+  // ── DEVICE ID ──
+  function getDeviceId() {
+    let id = localStorage.getItem('vishwaas-device-id');
+    if (!id) {
+      id = 'dev-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
+      localStorage.setItem('vishwaas-device-id', id);
+    }
+    return id;
+  }
+  const DEVICE_ID = getDeviceId();
 
   // ── THEME ──
   function setTheme(theme) {
@@ -227,7 +244,7 @@
         const response = await fetch(`${API_URL}/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: text, input_type: 'text' })
+          body: JSON.stringify({ text: text, input_type: 'text', device_id: DEVICE_ID })
         });
 
         if (!response.ok) throw new Error('Analysis failed');
@@ -256,7 +273,7 @@
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        const response = await fetch(`${API_URL}/analyze-image`, {
+        const response = await fetch(`${API_URL}/analyze-image?device_id=${DEVICE_ID}`, {
           method: 'POST',
           body: formData
         });
