@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="purple">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vishwaas AI — Page Not Found</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#6c63ff" />
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="navbar-logo">Vishwaas<span>AI</span></a>
+    <div class="navbar-right">
+      <div class="theme-switcher">
+        <button class="theme-btn t-purple active" onclick="setTheme('purple')" title="Purple"></button>
+        <button class="theme-btn t-lilac" onclick="setTheme('lilac')" title="Lilac"></button>
+        <button class="theme-btn t-teal" onclick="setTheme('teal')" title="Teal"></button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- 404 Content -->
+<div class="not-found fadeUp">
+  <div class="not-found-num">404</div>
+  <h1 class="not-found-title">Page Not Found</h1>
+  <p class="not-found-sub">Looks like this page is fake news — it doesn't exist!</p>
+  <a href="index.html" class="btn-analyze" style="width:auto;padding:14px 32px;text-decoration:none;">
+    🏠 Back to Home
+  </a>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p class="footer-text">
+      Built with ❤️ by <strong>Team Vishwaas</strong> — Aniket Mandale |
+      AI-Hack @ NareshIT
+    </p>
+  </div>
+</footer>
+
+<script>
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('vishwaas-theme', theme);
+    document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.t-${theme}`).classList.add('active');
+  }
+  const savedTheme = localStorage.getItem('vishwaas-theme') || 'purple';
+  setTheme(savedTheme);
+</script>
+
+</body>
+</html>

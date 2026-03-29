@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="purple">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vishwaas AI — Fake News Detector for India</title>
+  <meta name="description" content="AI-powered fake news detector for India. Supports Hindi, Marathi, Tamil, Bengali and more." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#6c63ff" />
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Vishwaas AI is analyzing...</div>
+  <div class="loading-sub">This takes 3–5 seconds</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="navbar-logo">Vishwaas<span>AI</span></a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="history.html">History</a></li>
+      <li><a href="#whatsapp">WhatsApp Bot</a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="theme-switcher">
+        <button class="theme-btn t-purple active" onclick="setTheme('purple')" title="Purple"></button>
+        <button class="theme-btn t-lilac" onclick="setTheme('lilac')" title="Lilac"></button>
+        <button class="theme-btn t-teal" onclick="setTheme('teal')" title="Teal"></button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge fadeUp">
+      <span class="badge-dot"></span>
+      AI-Powered · Free · Instant
+    </div>
+    <h1 class="hero-title fadeUp d1">
+      Is This News <span class="accent">Real</span> or Fake?
+    </h1>
+    <p class="hero-subtitle fadeUp d2">
+      Paste any headline, URL, or upload a WhatsApp screenshot.
+      Vishwaas AI analyzes it in seconds — in any Indian language.
+    </p>
+
+    <!-- Input Card -->
+    <div class="input-card fadeUp d3">
+
+      <!-- Tabs -->
+      <div class="input-tabs">
+        <button class="tab-btn active" id="tabText" onclick="switchTab('text')">📝 Text / URL</button>
+        <button class="tab-btn" id="tabImage" onclick="switchTab('image')">📷 WhatsApp Screenshot</button>
+      </div>
+
+      <!-- Text Input -->
+      <div id="textInputWrap">
+        <textarea
+          class="input-field"
+          id="textInput"
+          placeholder="Paste a news headline, URL, or any suspicious message here...&#10;&#10;Example: 'सरकार ने सभी बैंक खाते बंद करने का फैसला किया'"
+          rows="4"
+        ></textarea>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+        <input type="file" id="imageInput" accept="image/*" onchange="handleImageSelect(event)" />
+        <div class="upload-icon">📲</div>
+        <div class="upload-text">Click to upload WhatsApp screenshot</div>
+        <div class="upload-sub">Supports JPG, PNG — Max 5MB</div>
+        <img id="uploadPreview" class="upload-preview" alt="Preview" />
+      </div>
+
+      <!-- Language Hint -->
+      <div class="lang-hint">
+        <span>Supports:</span>
+        <span class="lang-pill">English</span>
+        <span class="lang-pill">हिंदी</span>
+        <span class="lang-pill">मराठी</span>
+        <span class="lang-pill">தமிழ்</span>
+        <span class="lang-pill">বাংলা</span>
+        <span class="lang-pill">తెలుగు</span>
+      </div>
+
+      <!-- Analyze Button -->
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+        🔍 Analyze Now
+      </button>
+
+    </div>
+  </div>
+</section>
+
+<!-- Stats Strip -->
+<section class="container">
+  <div class="stats-strip fadeUp">
+    <div class="stat-item">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">Total Checked</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="statFake">0</div>
+      <div class="stat-label">Fake Detected</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="statReal">0</div>
+      <div class="stat-label">Verified Real</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="statLangs">6+</div>
+      <div class="stat-label">Languages</div>
+    </div>
+  </div>
+</section>
+
+<!-- Recently Debunked -->
+<section class="container">
+  <h2 class="section-title fadeUp">🔥 Recently Debunked</h2>
+  <div class="feed-grid" id="feedGrid">
+    <!-- Populated by JS -->
+    <div class="feed-card">
+      <div class="feed-card-top">
+        <div class="verdict-badge UNCERTAIN">Loading...</div>
+      </div>
+      <div class="feed-card-text">Fetching recent checks...</div>
+    </div>
+  </div>
+</section>
+
+<!-- WhatsApp Coming Soon -->
+<section class="container" id="whatsapp">
+  <div class="whatsapp-section fadeUp">
+    <span class="whatsapp-icon">💬</span>
+    <h2 class="whatsapp-title">Coming Soon: WhatsApp Bot</h2>
+    <p class="whatsapp-desc">
+      Forward any suspicious WhatsApp message directly to our bot number.
+      Get an instant fact-check reply — without opening any website.
+      No app install needed. Works on any phone.
+    </p>
+    <div style="margin-bottom:16px; font-size:14px; color:var(--text-secondary);">
+      Simply forward the message to: <strong style="color:var(--accent)">+91 XXXXX XXXXX</strong>
+    </div>
+    <span class="coming-soon-badge">🚀 Coming Soon</span>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p class="footer-text">
+      Built with ❤️ by <strong>Team Vishwaas</strong> — Aniket Mandale |
+      AI-Hack @ NareshIT |
+      Powered by <a href="https://openrouter.ai" target="_blank">OpenRouter AI</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  // ── CONFIG ──
+  const API_URL = 'http://localhost:8000';
+
+  // ── THEME ──
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('vishwaas-theme', theme);
+    document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.t-${theme}`).classList.add('active');
+  }
+
+  // Load saved theme
+  const savedTheme = localStorage.getItem('vishwaas-theme') || 'purple';
+  setTheme(savedTheme);
+
+  // ── TABS ──
+  let currentTab = 'text';
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabText').classList.toggle('active', tab === 'text');
+    document.getElementById('tabImage').classList.toggle('active', tab === 'image');
+    document.getElementById('textInputWrap').style.display = tab === 'text' ? 'block' : 'none';
+    document.getElementById('uploadArea').classList.toggle('active-tab', tab === 'image');
+  }
+
+  // ── IMAGE UPLOAD ──
+  let selectedFile = null;
+  function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const preview = document.getElementById('uploadPreview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── ANALYZE ──
+  async function analyze() {
+    const btn = document.getElementById('analyzeBtn');
+    const overlay = document.getElementById('loadingOverlay');
+
+    if (currentTab === 'text') {
+      const text = document.getElementById('textInput').value.trim();
+      if (!text || text.length < 5) {
+        showToast('Please enter a headline or URL to analyze', 'error');
+        return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<div class="btn-spinner"></div> Analyzing...';
+      overlay.classList.add('show');
+
+      try {
+        const response = await fetch(`${API_URL}/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text, input_type: 'text' })
+        });
+
+        if (!response.ok) throw new Error('Analysis failed');
+        const result = await response.json();
+        sessionStorage.setItem('vishwaas-result', JSON.stringify(result));
+        sessionStorage.setItem('vishwaas-input', text);
+        window.location.href = 'result.html';
+
+      } catch (err) {
+        overlay.classList.remove('show');
+        showToast('Analysis failed. Please try again.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '🔍 Analyze Now';
+      }
+
+    } else {
+      if (!selectedFile) {
+        showToast('Please select an image to analyze', 'error');
+        return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<div class="btn-spinner"></div> Reading image...';
+      overlay.classList.add('show');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const response = await fetch(`${API_URL}/analyze-image`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) throw new Error('Image analysis failed');
+        const result = await response.json();
+        sessionStorage.setItem('vishwaas-result', JSON.stringify(result));
+        sessionStorage.setItem('vishwaas-input', `[Image: ${selectedFile.name}]`);
+        window.location.href = 'result.html';
+
+      } catch (err) {
+        overlay.classList.remove('show');
+        showToast('Image analysis failed. Please try again.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '🔍 Analyze Now';
+      }
+    }
+  }
+
+  // ── LOAD STATS ──
+  async function loadStats() {
+    try {
+      const res = await fetch(`${API_URL}/stats`);
+      const data = await res.json();
+      animateNum('statTotal', data.total);
+      animateNum('statFake', data.fake);
+      animateNum('statReal', data.real);
+    } catch (e) {}
+  }
+
+  function animateNum(id, target) {
+    const el = document.getElementById(id);
+    if (!el || target === 0) return;
+    let current = 0;
+    const step = Math.ceil(target / 30);
+    const interval = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = current;
+      if (current >= target) clearInterval(interval);
+    }, 40);
+  }
+
+  // ── LOAD RECENT FEED ──
+  async function loadFeed() {
+    try {
+      const res = await fetch(`${API_URL}/recent?limit=6`);
+      const data = await res.json();
+      const grid = document.getElementById('feedGrid');
+
+      if (!data.checks || data.checks.length === 0) {
+        grid.innerHTML = `
+          <div class="feed-card" style="grid-column:1/-1; text-align:center; padding:32px;">
+            <div style="color:var(--text-muted); font-size:14px;">
+              No checks yet — be the first to analyze something!
+            </div>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = data.checks.map(check => `
+        <div class="feed-card fadeIn">
+          <div class="feed-card-top">
+            <span class="verdict-badge ${check.verdict}">${check.verdict}</span>
+            <span style="font-size:12px;color:var(--text-muted)">${check.overall_score}/100</span>
+          </div>
+          <div class="feed-card-text">${escapeHtml(check.input_text)}</div>
+          <div class="feed-card-meta">
+            <span>🌐 ${check.detected_language || 'Unknown'}</span>
+            <span>${timeAgo(check.created_at)}</span>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      document.getElementById('feedGrid').innerHTML = `
+        <div class="feed-card" style="grid-column:1/-1; text-align:center; padding:32px;">
+          <div style="color:var(--text-muted); font-size:14px;">Could not load recent checks.</div>
+        </div>`;
+    }
+  }
+
+  // ── TOAST ──
+  function showToast(msg, type = '') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast show ${type}`;
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // ── HELPERS ──
+  function escapeHtml(text) {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function timeAgo(dateStr) {
+    const diff = (Date.now() - new Date(dateStr)) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return `${Math.floor(diff/86400)}d ago`;
+  }
+
+  // Enter key to analyze
+  document.getElementById('textInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) analyze();
+  });
+
+  // Init
+  loadStats();
+  loadFeed();
+</script>
+
+</body>
+</html>

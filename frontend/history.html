@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="purple">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vishwaas AI — History</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#6c63ff" />
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="navbar-logo">Vishwaas<span>AI</span></a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="history.html">History</a></li>
+      <li><a href="index.html#whatsapp">WhatsApp Bot</a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="theme-switcher">
+        <button class="theme-btn t-purple active" onclick="setTheme('purple')" title="Purple"></button>
+        <button class="theme-btn t-lilac" onclick="setTheme('lilac')" title="Lilac"></button>
+        <button class="theme-btn t-teal" onclick="setTheme('teal')" title="Teal"></button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- History Page -->
+<div class="history-page">
+  <div class="container">
+
+    <h1 class="page-title fadeUp">📜 Analysis History</h1>
+    <p class="page-subtitle fadeUp d1">All fake news checks — powered by Vishwaas AI</p>
+
+    <!-- Stats Row -->
+    <div class="stats-strip fadeUp d2" style="margin: 0 0 32px; padding: 20px 0;">
+      <div class="stat-item">
+        <div class="stat-num" id="statTotal">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="statFake" style="color:var(--fake)">0</div>
+        <div class="stat-label">Fake</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="statReal" style="color:var(--real)">0</div>
+        <div class="stat-label">Real</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="statUncertain" style="color:var(--uncertain)">0</div>
+        <div class="stat-label">Uncertain</div>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="filter-btns fadeUp d3">
+      <button class="filter-btn active" onclick="filterChecks('ALL')">All</button>
+      <button class="filter-btn" onclick="filterChecks('FAKE')">❌ Fake</button>
+      <button class="filter-btn" onclick="filterChecks('REAL')">✅ Real</button>
+      <button class="filter-btn" onclick="filterChecks('UNCERTAIN')">⚠️ Uncertain</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap fadeUp d4">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Content</th>
+            <th>Verdict</th>
+            <th>Score</th>
+            <th>Language</th>
+            <th>Type</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr>
+            <td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">
+              Loading history...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Back Button -->
+    <div class="action-btns fadeUp" style="margin-top:32px;">
+      <a href="index.html" class="btn-secondary">🔍 Check New Content</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p class="footer-text">
+      Built with ❤️ by <strong>Team Vishwaas</strong> — Aniket Mandale |
+      AI-Hack @ NareshIT |
+      Powered by <a href="https://openrouter.ai" target="_blank">OpenRouter AI</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  const API_URL = 'http://localhost:8000';
+  let allChecks = [];
+  let currentFilter = 'ALL';
+
+  // ── THEME ──
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('vishwaas-theme', theme);
+    document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.t-${theme}`).classList.add('active');
+  }
+  const savedTheme = localStorage.getItem('vishwaas-theme') || 'purple';
+  setTheme(savedTheme);
+
+  // ── LOAD HISTORY ──
+  async function loadHistory() {
+    try {
+      const res = await fetch(`${API_URL}/history?limit=100`);
+      const data = await res.json();
+      allChecks = data.checks || [];
+      updateStats();
+      renderTable(allChecks);
+    } catch (e) {
+      document.getElementById('historyBody').innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">
+            Could not load history. Make sure the backend is running.
+          </td>
+        </tr>`;
+    }
+  }
+
+  // ── UPDATE STATS ──
+  function updateStats() {
+    const total    = allChecks.length;
+    const fake     = allChecks.filter(c => c.verdict === 'FAKE').length;
+    const real     = allChecks.filter(c => c.verdict === 'REAL').length;
+    const uncertain= allChecks.filter(c => c.verdict === 'UNCERTAIN').length;
+
+    document.getElementById('statTotal').textContent    = total;
+    document.getElementById('statFake').textContent     = fake;
+    document.getElementById('statReal').textContent     = real;
+    document.getElementById('statUncertain').textContent= uncertain;
+  }
+
+  // ── FILTER ──
+  function filterChecks(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const filtered = filter === 'ALL'
+      ? allChecks
+      : allChecks.filter(c => c.verdict === filter);
+
+    renderTable(filtered);
+  }
+
+  // ── RENDER TABLE ──
+  function renderTable(checks) {
+    const tbody = document.getElementById('historyBody');
+
+    if (checks.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">
+            No checks found.
+            <a href="index.html" style="color:var(--accent);margin-left:8px;">Analyze something!</a>
+          </td>
+        </tr>`;
+      return;
+    }
+
+    tbody.innerHTML = checks.map(check => `
+      <tr>
+        <td class="input-cell" title="${escapeHtml(check.input_text)}">
+          ${escapeHtml(check.input_text)}
+        </td>
+        <td>
+          <span class="verdict-badge ${check.verdict}">${check.verdict}</span>
+        </td>
+        <td>
+          <span style="font-weight:600;color:${scoreColor(check.overall_score)}">
+            ${check.overall_score}/100
+          </span>
+        </td>
+        <td>${check.detected_language || 'Unknown'}</td>
+        <td style="text-transform:capitalize">${check.input_type || 'text'}</td>
+        <td>${timeAgo(check.created_at)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // ── HELPERS ──
+  function scoreColor(score) {
+    if (score >= 70) return 'var(--real)';
+    if (score >= 40) return 'var(--uncertain)';
+    return 'var(--fake)';
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function timeAgo(dateStr) {
+    const diff = (Date.now() - new Date(dateStr)) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return `${Math.floor(diff/86400)}d ago`;
+  }
+
+  // Toast
+  function showToast(msg, type = '') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast show ${type}`;
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // Init
+  loadHistory();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="purple">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vishwaas AI — Analysis Result</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#6c63ff" />
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="navbar-logo">Vishwaas<span>AI</span></a>
+    <ul class="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="history.html">History</a></li>
+      <li><a href="index.html#whatsapp">WhatsApp Bot</a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="theme-switcher">
+        <button class="theme-btn t-purple active" onclick="setTheme('purple')" title="Purple"></button>
+        <button class="theme-btn t-lilac" onclick="setTheme('lilac')" title="Lilac"></button>
+        <button class="theme-btn t-teal" onclick="setTheme('teal')" title="Teal"></button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Result Page -->
+<div class="result-page">
+  <div class="container">
+
+    <!-- Verdict Hero -->
+    <div class="result-hero fadeUp">
+      <div id="verdictBadge" class="verdict-badge-lg UNCERTAIN">Analyzing...</div>
+      <p class="result-summary" id="resultSummary">Loading analysis...</p>
+      <p class="result-lang" id="resultLang"></p>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:8px;" id="inputPreview"></p>
+    </div>
+
+    <!-- Result Grid -->
+    <div class="result-grid">
+
+      <!-- Gauge Card -->
+      <div class="result-card gauge-wrap fadeUp d1">
+        <div class="result-card-label">Trust Score</div>
+        <svg class="gauge-svg" viewBox="0 0 120 120">
+          <circle class="gauge-track" cx="60" cy="60" r="44"/>
+          <circle class="gauge-fill" id="gaugeFill" cx="60" cy="60" r="44"
+            stroke-dasharray="277"
+            stroke-dashoffset="277"
+            stroke="#6c63ff"/>
+          <text class="gauge-score" id="gaugeScore" x="60" y="57">0</text>
+          <text class="gauge-label" x="60" y="75">/ 100</text>
+        </svg>
+      </div>
+
+      <!-- Breakdown Card -->
+      <div class="result-card fadeUp d2">
+        <div class="result-card-label">Score Breakdown</div>
+        <div class="breakdown-list">
+
+          <div class="breakdown-item">
+            <div class="breakdown-top">
+              <span class="breakdown-name">Source Reliability</span>
+              <span class="breakdown-score" id="scoreSource">--</span>
+            </div>
+            <div class="breakdown-bar">
+              <div class="breakdown-fill" id="barSource" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="breakdown-item">
+            <div class="breakdown-top">
+              <span class="breakdown-name">Emotional Language</span>
+              <span class="breakdown-score" id="scoreEmotional">--</span>
+            </div>
+            <div class="breakdown-bar">
+              <div class="breakdown-fill" id="barEmotional" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="breakdown-item">
+            <div class="breakdown-top">
+              <span class="breakdown-name">Fact-Check Match</span>
+              <span class="breakdown-score" id="scoreFactCheck">--</span>
+            </div>
+            <div class="breakdown-bar">
+              <div class="breakdown-fill" id="barFactCheck" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="breakdown-item">
+            <div class="breakdown-top">
+              <span class="breakdown-name">Sensationalism</span>
+              <span class="breakdown-score" id="scoreSensationalism">--</span>
+            </div>
+            <div class="breakdown-bar">
+              <div class="breakdown-fill" id="barSensationalism" style="width:0%"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Flagged Words Card -->
+      <div class="result-card fadeUp d3">
+        <div class="result-card-label">Flagged Words</div>
+        <div class="flagged-wrap" id="flaggedWords">
+          <span style="color:var(--text-muted);font-size:13px;">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Reasons Card -->
+      <div class="result-card fadeUp d4">
+        <div class="result-card-label">Why this verdict?</div>
+        <ul class="reasons-list" id="reasonsList">
+          <li class="reason-item">
+            <div class="reason-dot"></div>
+            <span>Loading reasons...</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Sources Card -->
+      <div class="result-card fadeUp d5">
+        <div class="result-card-label">Sources Referenced</div>
+        <div class="sources-list" id="sourcesList">
+          <span style="color:var(--text-muted);font-size:13px;">Loading sources...</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-btns fadeUp">
+      <a href="index.html" class="btn-secondary">🔍 Check Another</a>
+      <button class="btn-secondary" onclick="shareResult()">📤 Share Result</button>
+      <a href="history.html" class="btn-secondary">📜 View History</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p class="footer-text">
+      Built with ❤️ by <strong>Team Vishwaas</strong> — Aniket Mandale |
+      AI-Hack @ NareshIT |
+      Powered by <a href="https://openrouter.ai" target="_blank">OpenRouter AI</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  // ── THEME ──
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('vishwaas-theme', theme);
+    document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.t-${theme}`).classList.add('active');
+  }
+  const savedTheme = localStorage.getItem('vishwaas-theme') || 'purple';
+  setTheme(savedTheme);
+
+  // ── LOAD RESULT ──
+  const resultData = sessionStorage.getItem('vishwaas-result');
+  const inputText  = sessionStorage.getItem('vishwaas-input') || '';
+
+  if (!resultData) {
+    window.location.href = 'index.html';
+  } else {
+    const result = JSON.parse(resultData);
+    renderResult(result, inputText);
+  }
+
+  function renderResult(r, input) {
+    // Verdict badge
+    const badge = document.getElementById('verdictBadge');
+    const icons = { REAL: '✅', FAKE: '❌', UNCERTAIN: '⚠️' };
+    badge.className = `verdict-badge-lg ${r.verdict}`;
+    badge.textContent = `${icons[r.verdict] || '🔍'} ${r.verdict}`;
+
+    // Summary
+    document.getElementById('resultSummary').textContent = r.summary || 'Analysis complete.';
+
+    // Language
+    if (r.detected_language) {
+      document.getElementById('resultLang').textContent = `🌐 Detected language: ${r.detected_language}`;
+    }
+
+    // Input preview
+    if (input) {
+      const preview = input.length > 100 ? input.substring(0, 100) + '...' : input;
+      document.getElementById('inputPreview').textContent = `Analyzed: "${preview}"`;
+    }
+
+    // Gauge
+    const score = r.overall_score || 0;
+    document.getElementById('gaugeScore').textContent = score;
+
+    // Gauge color based on verdict
+    const gaugeColors = { REAL: '#00e676', FAKE: '#ff3d57', UNCERTAIN: '#ffd740' };
+    const gaugeColor  = gaugeColors[r.verdict] || '#6c63ff';
+    const gaugeFill   = document.getElementById('gaugeFill');
+    gaugeFill.setAttribute('stroke', gaugeColor);
+
+    // Animate gauge
+    setTimeout(() => {
+      const circumference = 277;
+      const offset = circumference - (score / 100) * circumference;
+      gaugeFill.style.transition = 'stroke-dashoffset 1.2s ease';
+      gaugeFill.setAttribute('stroke-dashoffset', offset);
+    }, 300);
+
+    // Breakdown bars
+    setBar('scoreSource',       'barSource',       r.source_reliability,  false);
+    setBar('scoreEmotional',    'barEmotional',    r.emotional_language,  true);
+    setBar('scoreFactCheck',    'barFactCheck',    r.fact_check_match,    false);
+    setBar('scoreSensationalism','barSensationalism',r.sensationalism,    true);
+
+    // Flagged words
+    const flaggedWrap = document.getElementById('flaggedWords');
+    if (r.flagged_words && r.flagged_words.length > 0) {
+      flaggedWrap.innerHTML = r.flagged_words.map(word =>
+        `<span class="flagged-word">${escapeHtml(word)}</span>`
+      ).join('');
+    } else {
+      flaggedWrap.innerHTML = '<span style="color:var(--real);font-size:13px;">✅ No suspicious words detected</span>';
+    }
+
+    // Reasons
+    const reasonsList = document.getElementById('reasonsList');
+    if (r.reasons && r.reasons.length > 0) {
+      reasonsList.innerHTML = r.reasons.map(reason => `
+        <li class="reason-item">
+          <div class="reason-dot"></div>
+          <span>${escapeHtml(reason)}</span>
+        </li>
+      `).join('');
+    } else {
+      reasonsList.innerHTML = '<li class="reason-item"><div class="reason-dot"></div><span>No specific reasons provided.</span></li>';
+    }
+
+    // Sources
+    const sourcesList = document.getElementById('sourcesList');
+    if (r.sources && r.sources.length > 0) {
+      sourcesList.innerHTML = r.sources.map(source => {
+        const isUrl = source.startsWith('http');
+        return isUrl
+          ? `<a href="${escapeHtml(source)}" target="_blank" class="source-item">🔗 ${escapeHtml(source)}</a>`
+          : `<div class="source-item">📰 ${escapeHtml(source)}</div>`;
+      }).join('');
+    } else {
+      sourcesList.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">No external sources referenced.</div>';
+    }
+  }
+
+  // Set breakdown bar
+  function setBar(scoreId, barId, value, invertColor) {
+    const score = value || 0;
+    document.getElementById(scoreId).textContent = score + '/100';
+    const bar = document.getElementById(barId);
+    setTimeout(() => { bar.style.width = score + '%'; }, 400);
+
+    // Color logic
+    if (invertColor) {
+      // High emotional language / sensationalism = bad
+      if (score >= 70) bar.classList.add('high');
+      else if (score >= 40) bar.classList.add('medium');
+      else bar.classList.add('low');
+    } else {
+      // High source reliability / fact check = good
+      if (score >= 70) bar.classList.add('low');
+      else if (score >= 40) bar.classList.add('medium');
+      else bar.classList.add('high');
+    }
+  }
+
+  // Share result
+  function shareResult() {
+    const result = JSON.parse(sessionStorage.getItem('vishwaas-result') || '{}');
+    const text = `Vishwaas AI says this news is ${result.verdict} (Score: ${result.overall_score}/100)\n\n${result.summary}\n\nCheck it yourself at Vishwaas AI!`;
+    if (navigator.share) {
+      navigator.share({ title: 'Vishwaas AI Result', text: text });
+    } else {
+      navigator.clipboard.writeText(text);
+      showToast('Result copied to clipboard!', 'success');
+    }
+  }
+
+  // Toast
+  function showToast(msg, type = '') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast show ${type}`;
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // Escape HTML
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+</script>
+
+</body>
+</html>
