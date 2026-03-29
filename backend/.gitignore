@@ -3,3 +3,9 @@ __pycache__/
 *.pyc
 .DS_Store
 node_modules/
+New folder/
+*.msi
+*.msix
+backend/test_gemini.py
+backend/debug.py
+backend/test_model.py
