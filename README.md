@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Vishwaas AI — Fake News Detector for India
 
 > **Team Vishwaas** | Aniket Mandale | AI-Hack @ NareshIT 2026
@@ -202,3 +203,7 @@ MIT License — free to use and modify.
 ---
 
 > *Vishwaas (विश्वास) means "Trust" in Hindi — because every Indian deserves to trust the news they read.*
+=======
+# vishwaas-ai
+Hackathon Projet
+>>>>>>> 2c11d84f43f4fbf5d630f0564b354418e4fc7628
