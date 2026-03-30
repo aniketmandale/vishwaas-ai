@@ -126,6 +126,32 @@ def parse_response(content: str) -> dict:
     return None
 
 
+def apply_keyword_rules(text: str, result: dict) -> dict:
+    text_lower = text.lower()
+
+    # Strong FAKE indicators — override uncertain results
+    fake_patterns = [
+        "free electricity", "free petrol", "free internet", "free mobile",
+        "muft bijli", "muft petrol", "मुफ्त बिजली", "मुफ्त पेट्रोल",
+        "tax free india", "no tax", "government gives free",
+        "सरकार ने मुफ्त", "सभी नागरिकों को मुफ्त",
+        "free for all citizens", "announces free",
+        "whatsapp forward", "share this", "जल्दी शेयर करो",
+        "100% guaranteed", "shock", "breaking", "viral"
+    ]
+
+    strong_fake = any(p in text_lower for p in fake_patterns)
+
+    if strong_fake and result.get("verdict") == "UNCERTAIN":
+        result["verdict"] = "FAKE"
+        result["overall_score"] = min(result.get("overall_score", 50), 30)
+        result["summary"] = "This claim matches common misinformation patterns — free benefit announcements without official sources are almost always fake."
+        result["reasons"].insert(0, "Matches known fake news pattern — unverified free benefit claim")
+        result["flagged_words"] = list(set(result.get("flagged_words", []) + ["free", "all citizens", "government announces"]))
+
+    return result
+
+
 def analyze_text(text: str) -> dict:
     try:
         response = httpx.post(
@@ -149,6 +175,7 @@ def analyze_text(text: str) -> dict:
 
         result = parse_response(content)
         if result:
+            result = apply_keyword_rules(text, result)
             return result
 
         return get_fallback_response(text)
