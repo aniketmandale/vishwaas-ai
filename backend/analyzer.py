@@ -14,7 +14,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
 def get_model():
     key = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
     genai.configure(api_key=key)
-    return genai.GenerativeModel("gemini-1.5-flash")
+    return genai.GenerativeModel("gemini-2.0-flash-lite")
 
 
 def build_prompt(text: str) -> str:
