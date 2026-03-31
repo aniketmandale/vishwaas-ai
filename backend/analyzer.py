@@ -5,18 +5,21 @@ import base64
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Load from backend/.env for local, os.environ for Render
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "mistralai/mistral-7b-instruct:free")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.getenv("OPENROUTER_MODEL") or "google/gemma-3-4b-it:free"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-HEADERS = {
-    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-    "Content-Type": "application/json",
-    "HTTP-Referer": "https://vishwaas-ai.vercel.app",
-    "X-Title": "Vishwaas AI"
-}
+def get_headers():
+    key = os.environ.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+    return {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://vishwaas-ai.vercel.app",
+        "X-Title": "Vishwaas AI"
+    }
 
 
 def build_prompt(text: str) -> str:
@@ -156,7 +159,7 @@ def analyze_text(text: str) -> dict:
     try:
         response = httpx.post(
             OPENROUTER_URL,
-            headers=HEADERS,
+            headers=get_headers(),
             json={
                 "model": OPENROUTER_MODEL,
                 "messages": [{"role": "user", "content": build_prompt(text)}],
@@ -192,7 +195,7 @@ def analyze_image(image_bytes: bytes, filename: str) -> dict:
 
         response = httpx.post(
             OPENROUTER_URL,
-            headers=HEADERS,
+            headers=get_headers(),
             json={
                 "model": "google/gemma-3-12b-it:free",
                 "messages": [{
