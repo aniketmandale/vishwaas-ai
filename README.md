@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/Python-3.14-blue?style=for-the-badge&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.135-green?style=for-the-badge&logo=fastapi)
 ![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase)
-![OpenRouter](https://img.shields.io/badge/OpenRouter-AI-ff6b6b?style=for-the-badge)
+![Gemini](https://img.shields.io/badge/Google_Gemini-AI-4285F4?style=for-the-badge&logo=google)
 ![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?style=for-the-badge&logo=vercel)
 ![Render](https://img.shields.io/badge/Render-Backend-46E3B7?style=for-the-badge&logo=render)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
@@ -23,36 +23,17 @@
 | [Backend API](https://vishwaas-ai-api.onrender.com) | FastAPI REST API |
 | [API Docs](https://vishwaas-ai-api.onrender.com/docs) | Interactive Swagger docs |
 
----
+> **Note:** The live demo shows the full UI and all features.
+> For complete AI analysis with decisive verdicts, clone and run locally —
+> see the [How to Run Locally](#️-how-to-run-locally) section below.
 
+---
 
 ## What is Vishwaas AI?
 
 India is the world's largest consumer of misinformation. Every day, millions of fake news articles, fabricated headlines, and doctored screenshots are forwarded on WhatsApp in Hindi, Marathi, Tamil, Bengali, and other regional languages. Ordinary people have no fast, reliable way to verify what is real before sharing it further.
 
 **Vishwaas AI** solves this. Any user can paste a suspicious headline, enter a news URL, or upload a WhatsApp screenshot and receive a detailed AI-powered credibility report in under 5 seconds — in any Indian language.
-
----
-
-## 📸 Screenshots
-
-### Landing Page
-> Add screenshot of landing page here
-> `![Landing Page](screenshots/landing.png)`
-
-### Result Page
-> Add screenshot of result page here
-> `![Result Page](screenshots/result.png)`
-
-### History Page
-> Add screenshot of history page here
-> `![History Page](screenshots/history.png)`
-
-**To add screenshots:**
-1. Create a `screenshots` folder in root
-2. Take screenshots of the app
-3. Save them as `landing.png`, `result.png`, `history.png`
-4. Push to GitHub
 
 ---
 
@@ -81,8 +62,8 @@ India is the world's largest consumer of misinformation. Every day, millions of 
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| AI Engine | OpenRouter API — google/gemma-3-4b-it | Fake news analysis |
-| Image OCR | Gemini Vision via OpenRouter | WhatsApp screenshot reading |
+| AI Engine | Google Gemini AI | Fake news analysis + Indian language support |
+| Image OCR | Gemini Vision | WhatsApp screenshot reading |
 | Backend | Python 3.14 + FastAPI | REST API server |
 | Database | Supabase (PostgreSQL) | Store analysis history |
 | Frontend | HTML5 + CSS3 + Vanilla JS | Web interface |
@@ -98,7 +79,7 @@ India is the world's largest consumer of misinformation. Every day, millions of 
 vishwaas-ai/
 ├── backend/
 │   ├── main.py          # FastAPI server — all API endpoints
-│   ├── analyzer.py      # AI analysis logic — prompt engineering
+│   ├── analyzer.py      # AI analysis logic — Gemini prompt engineering
 │   ├── database.py      # Supabase database operations
 │   ├── requirements.txt # Python dependencies
 │   └── .env             # API keys (never committed)
@@ -153,8 +134,7 @@ pip install -r backend/requirements.txt
 ### 3. Set up environment variables
 Create `backend/.env` file:
 ```
-OPENROUTER_API_KEY=your_openrouter_key_here
-OPENROUTER_MODEL=google/gemma-3-4b-it:free
+GEMINI_API_KEY=your_gemini_key_here
 SUPABASE_URL=your_supabase_url_here
 SUPABASE_KEY=your_supabase_anon_key_here
 ```
@@ -189,7 +169,7 @@ User Input (Text / URL / Image)
            ↓
 FastAPI Backend (/analyze)
            ↓
-OpenRouter AI (google/gemma-3-4b-it)
+Google Gemini AI
            ↓
 Structured JSON Response
   ├── Overall Score (0-100)
