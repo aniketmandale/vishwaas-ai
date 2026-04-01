@@ -1,6 +1,6 @@
 # Vishwaas AI — Fake News Detector for India
 
-> **Team Vishwaas** | Aniket Mandale | AI-Hack @ NareshIT 2026
+> **Team Vishwaas** | Aniket Mandale
 
 ![Vishwaas AI](https://img.shields.io/badge/Vishwaas_AI-Fake_News_Detector-6c63ff?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.14-blue?style=for-the-badge&logo=python)
@@ -34,6 +34,19 @@
 India is the world's largest consumer of misinformation. Every day, millions of fake news articles, fabricated headlines, and doctored screenshots are forwarded on WhatsApp in Hindi, Marathi, Tamil, Bengali, and other regional languages. Ordinary people have no fast, reliable way to verify what is real before sharing it further.
 
 **Vishwaas AI** solves this. Any user can paste a suspicious headline, enter a news URL, or upload a WhatsApp screenshot and receive a detailed AI-powered credibility report in under 5 seconds — in any Indian language.
+
+---
+
+## 📸 Screenshots
+
+### Landing Page
+![Landing Page](screenshots/landing.png)
+
+### Result Page
+![Result Page](screenshots/result.png)
+
+### History Page
+![History Page](screenshots/history.png)
 
 ---
 
@@ -93,6 +106,7 @@ vishwaas-ai/
 │   ├── favicon.svg      # Browser tab icon
 │   └── manifest.json    # PWA configuration
 │
+├── screenshots/         # Project screenshots
 ├── supabase_schema.sql  # Database schema
 ├── DEPLOY.md            # Deployment guide
 └── README.md
@@ -197,7 +211,7 @@ Display on Result Page
 
 ---
 
-## 👤 Team
+## 👤 Author
 
 | Name | Role |
 |---|---|
@@ -206,9 +220,6 @@ Display on Result Page
 - 🔗 GitHub: [github.com/aniketmandale](https://github.com/aniketmandale)
 - 💼 LinkedIn: [linkedin.com/in/aniket-mandale-2820111b8](https://linkedin.com/in/aniket-mandale-2820111b8)
 - 📧 Email: aniketmandale999@gmail.com
-
-**Hackathon:** AI-Hack @ NareshIT 2026
-**Team Name:** Team Vishwaas
 
 ---
 
