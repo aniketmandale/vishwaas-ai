@@ -40,13 +40,13 @@ India is the world's largest consumer of misinformation. Every day, millions of 
 ## 📸 Screenshots
 
 ### Landing Page
-![Landing Page](screenshots/landing.png)
+![Landing Page](screenshots/Landing.png)
 
 ### Result Page
-![Result Page](screenshots/result.png)
+![Result Page](screenshots/Result.png)
 
 ### History Page
-![History Page](screenshots/history.png)
+![History Page](screenshots/History.png)
 
 ---
 
