@@ -1,24 +1,29 @@
+import httpx
 import json
 import os
 import base64
 from pathlib import Path
 from dotenv import load_dotenv
-import google.generativeai as genai
 
-# Load from backend/.env for local, os.environ for Render
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.getenv("OPENROUTER_MODEL") or "google/gemma-3-4b-it:free"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
-def get_model():
-    key = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
-    genai.configure(api_key=key)
-    return genai.GenerativeModel("gemini-2.0-flash-lite")
+def get_headers():
+    key = os.environ.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+    return {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://vishwaas-ai.vercel.app",
+        "X-Title": "Vishwaas AI"
+    }
 
 
 def build_prompt(text: str) -> str:
-    return f"""You are Vishwaas AI, a strict Indian fake news detector. Analyze this news and give a DECISIVE verdict.
+    return f"""You are Vishwaas AI, a strict Indian fact-checker. Analyze this news and give a DECISIVE verdict.
 
 NEWS: "{text}"
 
@@ -61,8 +66,31 @@ def parse_response(content: str) -> dict:
 
     try:
         result = json.loads(content)
+
+        # Handle model's own format
+        if "is_fake_news" in result:
+            is_fake = result.get("is_fake_news", False)
+            reason = result.get("reason", "Analysis complete.")
+            verdict = "FAKE" if is_fake else "REAL"
+            score = 20 if is_fake else 80
+            return {
+                "detected_language": "English",
+                "overall_score": score,
+                "verdict": verdict,
+                "summary": reason[:200],
+                "source_reliability": 15 if is_fake else 85,
+                "emotional_language": 80 if is_fake else 20,
+                "fact_check_match": 10 if is_fake else 85,
+                "sensationalism": 85 if is_fake else 15,
+                "flagged_words": [],
+                "reasons": [reason],
+                "sources": []
+            }
+
+        # Our expected format
         if "overall_score" in result and "verdict" in result:
             return result
+
     except json.JSONDecodeError:
         pass
 
@@ -126,10 +154,24 @@ def apply_keyword_rules(text: str, result: dict) -> dict:
 
 def analyze_text(text: str) -> dict:
     try:
-        model = get_model()
-        response = model.generate_content(build_prompt(text))
-        content = response.text
-        print(f"Raw Gemini response: {content[:200]}")
+        response = httpx.post(
+            OPENROUTER_URL,
+            headers=get_headers(),
+            json={
+                "model": OPENROUTER_MODEL,
+                "messages": [{"role": "user", "content": build_prompt(text)}],
+                "temperature": 0.1
+            },
+            timeout=30.0
+        )
+
+        data = response.json()
+        if "choices" not in data:
+            print(f"No choices in response: {data}")
+            return get_fallback_response(text)
+
+        content = data["choices"][0]["message"]["content"]
+        print(f"Raw AI response: {content[:200]}")
 
         result = parse_response(content)
         if result:
@@ -148,15 +190,28 @@ def analyze_image(image_bytes: bytes, filename: str) -> dict:
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
         media_type = "image/png" if filename.lower().endswith(".png") else "image/jpeg"
 
-        model = get_model()
-        import PIL.Image
-        import io
-        image = PIL.Image.open(io.BytesIO(image_bytes))
+        response = httpx.post(
+            OPENROUTER_URL,
+            headers=get_headers(),
+            json={
+                "model": "google/gemma-3-12b-it:free",
+                "messages": [{
+                    "role": "user",
+                    "content": [
+                        {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
+                        {"type": "text", "content": "Extract all text from this image then analyze if it is fake news. " + build_prompt("[extracted text from image]")}
+                    ]
+                }],
+                "temperature": 0.1
+            },
+            timeout=45.0
+        )
 
-        prompt = f"Extract all text from this WhatsApp screenshot or news image. Then analyze if it is fake news. {build_prompt('[extracted text from image]')}"
-        response = model.generate_content([prompt, image])
-        content = response.text
+        data = response.json()
+        if "choices" not in data:
+            return get_fallback_response("image content")
 
+        content = data["choices"][0]["message"]["content"]
         result = parse_response(content)
         if result:
             result["input_type"] = "image"
