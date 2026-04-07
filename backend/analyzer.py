@@ -239,11 +239,17 @@ def get_fallback_response(text: str) -> dict:
     real_patterns = [
         "rbi", "reserve bank", "supreme court", "high court",
         "budget 2024", "budget 2025", "parliament passed",
-        "election commission", "isro", "nasa"
+        "election commission", "isro", "nasa",
+        "adani", "tata", "reliance", "infosys", "wipro",
+        "acquires", "acquisition", "merger", "stake",
+        "ndtv", "sebi", "sensex", "nifty", "bse", "nse",
+        "modi", "pm modi", "prime minister", "cabinet",
+        "rbi governor", "interest rate", "repo rate",
+        "ipl", "bcci", "cricket", "world cup"
     ]
 
     is_fake = any(p in text_lower for p in fake_patterns)
-    is_real = any(p in text_lower for p in real_patterns)
+    is_real = any(p in text_lower for p in real_patterns) and not is_fake
 
     if is_fake:
         return {
